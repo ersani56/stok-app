@@ -65,53 +65,66 @@ class PenjualanResource extends Resource
                             }
 
                             function initializeScanner() {
-                                const statusElement = document.getElementById("scanner-status");
-                                statusElement.textContent = "Menyiapkan scanner...";
+                            const statusElement = document.getElementById("scanner-status");
+                            statusElement.textContent = "Menyiapkan scanner...";
 
-                                if (typeof Html5Qrcode !== "undefined") {
-                                    html5QrCode = new Html5Qrcode("scanner");
+                            if (typeof Html5Qrcode !== "undefined") {
+                                html5QrCode = new Html5Qrcode("scanner");
 
-                                    Html5Qrcode.getCameras().then(devices => {
-                                        if (devices && devices.length) {
-                                            statusElement.textContent = "Memulai kamera...";
+                                Html5Qrcode.getCameras().then(devices => {
+                                    if (devices && devices.length) {
+                                        statusElement.textContent = "Memilih kamera...";
 
-                                            const backCamera = devices.find(d => d.label.toLowerCase().includes("back"));
-                                            const cameraId = backCamera ? backCamera.id : devices[0].id;
+                                        // Prioritas 1: Kamera belakang (back)
+                                        // Prioritas 2: Kamera dengan resolusi tertinggi
+                                        // Prioritas 3: Kamera pertama
+                                        let selectedCamera = devices.find(d =>
+                                            d.label.toLowerCase().includes("back") ||
+                                            d.label.toLowerCase().includes("rear")
+                                        );
 
-                                            html5QrCode.start(
-                                                cameraId,
-                                                {
-                                                    fps: 10,
-                                                    qrbox: { width: 250, height: 250 }
-                                                },
-                                                qrCodeMessage => {
-                                                    const input = document.querySelector("input[name=\'data[kode_barang]\']");
-                                                    if (input) {
-                                                        input.value = qrCodeMessage;
-                                                        input.dispatchEvent(new Event("input"));
-                                                        closeScanner();
-                                                    }
-                                                },
-                                                errorMessage => {
-                                                    statusElement.textContent = "Scanning: " + errorMessage;
-                                                }
-                                            ).then(() => {
-                                                statusElement.textContent = "Arahkan kamera ke QR code";
-                                            }).catch(err => {
-                                                statusElement.textContent = "Gagal memulai kamera: " + err.message;
-                                                console.error(err);
-                                            });
-                                        } else {
-                                            statusElement.textContent = "Tidak ada kamera yang ditemukan";
+                                        if (!selectedCamera) {
+                                            selectedCamera = devices.reduce((prev, current) =>
+                                                (prev && prev.width > current.width) ? prev : current
+                                            );
                                         }
-                                    }).catch(err => {
-                                        statusElement.textContent = "Tidak dapat mengakses kamera: " + err.message;
-                                        console.error(err);
-                                    });
-                                } else {
-                                    statusElement.textContent = "Library scanner tidak tersedia";
-                                }
+
+                                        statusElement.textContent = "Memulai kamera...";
+
+                                        html5QrCode.start(
+                                            selectedCamera.id,
+                                            {
+                                                fps: 10,
+                                                qrbox: { width: 250, height: 250 }
+                                            },
+                                            qrCodeMessage => {
+                                                const input = document.querySelector("input[name="data[kode_barang]"]");
+                                                if (input) {
+                                                    input.value = qrCodeMessage;
+                                                    input.dispatchEvent(new Event("input"));
+                                                    closeScanner();
+                                                }
+                                            },
+                                            errorMessage => {
+                                                statusElement.textContent = "Scanning: " + errorMessage;
+                                            }
+                                        ).then(() => {
+                                            statusElement.textContent = "Arahkan kamera ke QR code";
+                                        }).catch(err => {
+                                            statusElement.textContent = "Gagal memulai kamera: " + err.message;
+                                            console.error(err);
+                                        });
+                                    } else {
+                                        statusElement.textContent = "Tidak ada kamera yang ditemukan";
+                                    }
+                                }).catch(err => {
+                                    statusElement.textContent = "Tidak dapat mengakses kamera: " + err.message;
+                                    console.error(err);
+                                });
+                            } else {
+                                statusElement.textContent = "Library scanner tidak tersedia";
                             }
+                        }
                         </script>
                     ')),
                 TextInput::make('jumlah')
