@@ -65,53 +65,70 @@ class PenjualanResource extends Resource
                             }
 
                             function initializeScanner() {
-                                const statusElement = document.getElementById("scanner-status");
-                                statusElement.textContent = "Menyiapkan scanner...";
+                            const statusElement = document.getElementById("scanner-status");
+                            statusElement.textContent = "Menyiapkan scanner...";
 
-                                if (typeof Html5Qrcode !== "undefined") {
-                                    html5QrCode = new Html5Qrcode("scanner");
+                            if (typeof Html5Qrcode !== "undefined") {
+                                html5QrCode = new Html5Qrcode("scanner");
 
-                                    Html5Qrcode.getCameras().then(devices => {
-                                        if (devices && devices.length) {
-                                            statusElement.textContent = "Memulai kamera...";
-
-                                            const backCamera = devices.find(d => d.label.toLowerCase().includes("back"));
-                                            const cameraId = backCamera ? backCamera.id : devices[0].id;
-
-                                            html5QrCode.start(
-                                                cameraId,
-                                                {
-                                                    fps: 10,
-                                                    qrbox: { width: 250, height: 250 }
-                                                },
-                                                qrCodeMessage => {
-                                                    const input = document.querySelector("input[name=\'data[kode_barang]\']");
-                                                    if (input) {
-                                                        input.value = qrCodeMessage;
-                                                        input.dispatchEvent(new Event("input"));
-                                                        closeScanner();
-                                                    }
-                                                },
-                                                errorMessage => {
-                                                    statusElement.textContent = "Scanning: " + errorMessage;
-                                                }
-                                            ).then(() => {
-                                                statusElement.textContent = "Arahkan kamera ke QR code";
-                                            }).catch(err => {
-                                                statusElement.textContent = "Gagal memulai kamera: " + err.message;
-                                                console.error(err);
-                                            });
-                                        } else {
-                                            statusElement.textContent = "Tidak ada kamera yang ditemukan";
+                                Html5Qrcode.getCameras().then(devices => {
+                                    if (devices && devices.length) {
+                                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back"));
+                                        if (!backCamera) {
+                                            statusElement.textContent = "Kamera belakang tidak ditemukan";
+                                            return;
                                         }
-                                    }).catch(err => {
-                                        statusElement.textContent = "Tidak dapat mengakses kamera: " + err.message;
-                                        console.error(err);
-                                    });
-                                } else {
-                                    statusElement.textContent = "Library scanner tidak tersedia";
-                                }
+
+                                        const cameraId = backCamera.id;
+                                        statusElement.textContent = "Memulai kamera...";
+
+                                        html5QrCode.start(
+                                            cameraId,
+                                            {
+                                                fps: 10,
+                                                qrbox: { width: 250, height: 250 }
+                                            },
+                                            qrCodeMessage => {
+                                                const input = document.querySelector("input[name=\'data[kode_barang]\']");
+                                                if (input) {
+                                                    input.value = qrCodeMessage;
+                                                    input.dispatchEvent(new Event("input"));
+                                                    closeScanner();
+                                                }
+                                            },
+                                            errorMessage => {
+                                                statusElement.textContent = "Scanning: " + errorMessage;
+                                            }
+                                        ).then(() => {
+                                            statusElement.textContent = "Arahkan kamera ke QR code";
+                                        }).catch(err => {
+                                            statusElement.textContent = "Gagal memulai kamera: " + err.message;
+                                            console.error(err);
+                                        });
+                                    } else {
+                                        statusElement.textContent = "Tidak ada kamera yang ditemukan";
+                                    }
+                                }).catch(err => {
+                                    statusElement.textContent = "Tidak dapat mengakses kamera: " + err.message;
+                                    console.error(err);
+                                });
+                            } else {
+                                statusElement.textContent = "Library scanner tidak tersedia";
                             }
+                        }
+
+                        function closeScanner() {
+                            if (html5QrCode) {
+                                html5QrCode.stop().then(() => {
+                                    html5QrCode = null;
+                                    document.getElementById("scanner-modal").style.display = "none";
+                                }).catch(err => {
+                                    console.error(err);
+                                });
+                            } else {
+                                document.getElementById("scanner-modal").style.display = "none";
+                            }
+                        }
                         </script>
                     ')),
                 TextInput::make('jumlah')
