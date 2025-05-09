@@ -73,7 +73,13 @@ class PenjualanResource extends Resource
 
                                 Html5Qrcode.getCameras().then(devices => {
                                     if (devices && devices.length) {
-                                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back"));
+                                        console.log(devices); // Periksa daftar kamera yang tersedia
+
+                                        // Coba menggunakan indeks kamera
+                                        // const cameraId = devices[1].id;
+
+                                        // Coba menggunakan facingMode
+                                        const backCamera = devices.find(d => d.facingMode === "environment" || d.label.toLowerCase().includes("back"));
                                         if (!backCamera) {
                                             statusElement.textContent = "Kamera belakang tidak ditemukan";
                                             return;
@@ -118,7 +124,7 @@ class PenjualanResource extends Resource
                         }
 
                         function closeScanner() {
-                            if (html5QrCode) {
+                            if (html5QrCode && html5QrCode.isRunning()) {
                                 html5QrCode.stop().then(() => {
                                     html5QrCode = null;
                                     document.getElementById("scanner-modal").style.display = "none";
