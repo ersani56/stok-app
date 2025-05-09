@@ -20,11 +20,19 @@ class BarangResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('kode_barang')->required()->unique(),
+                Forms\Components\TextInput::make('kode_barang')
+                ->required()
+                ->unique(),
                 Forms\Components\TextInput::make('nama')->required(),
                 Forms\Components\TextInput::make('stok')->numeric()->required(),
-                Forms\Components\TextInput::make('harga_beli')->numeric()->required(),
-                Forms\Components\TextInput::make('harga_jual')->numeric()->required(),
+                Forms\Components\TextInput::make('harga_beli')
+                ->numeric()
+                ->prefix('Rp.')
+                ->required(),
+                Forms\Components\TextInput::make('harga_jual')
+                ->numeric()
+                ->prefix('Rp.')
+                ->required(),
             ]);
     }
 
